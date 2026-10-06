@@ -26,10 +26,21 @@ public abstract class SessionManager {
         this.sessions.stream().filter(session -> session.getSubscribers().contains(subscriber))
                 .forEach(session -> session.removeSubscriber(subscriber));
 
-        this.sessions.stream()
+        Optional<Session> existingSession = this.sessions.stream()
                 .filter(filterSession -> player.getUniqueId().equals(filterSession.getUniqueIdOfObservedPlayer()))
-                .findFirst()
-                .ifPresentOrElse(session -> session.addSubscriber(subscriber), () -> createSession(player, subscriber));
+                .findFirst();
+
+        if (existingSession.isPresent()) {
+            existingSession.get().addSubscriber(subscriber);
+            return;
+        }
+        if (!player.isOnline()) {
+            this.instance.getServer().getAsyncScheduler().runNow(this.instance, _ ->
+                    createSession(player, subscriber)
+            );
+        } else {
+            createSession(player, subscriber);
+        }
     }
 
     public void removeSubscriberFromSession(@NotNull HumanEntity subscriber) {

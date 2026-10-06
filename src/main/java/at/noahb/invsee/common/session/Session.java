@@ -47,7 +47,9 @@ public interface Session extends SessionInventory {
     default void save() {
         Player cachedPlayer = getCachedPlayer();
         if (cachedPlayer != null) {
-            cachedPlayer.saveData();
+            InvseePlugin.getInstance().getServer().getAsyncScheduler().runNow(InvseePlugin.getInstance(), _ ->
+                    cachedPlayer.saveData()
+            );
         }
     }
 
