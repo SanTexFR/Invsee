@@ -66,6 +66,13 @@ public interface Session extends SessionInventory {
             return Optional.of(cached);
         }
 
+        // Si le joueur est en ligne au moment de l'appel
+        if (offlinePlayer.isOnline() && offlinePlayer.getPlayer() != null) {
+            Player onlinePlayer = offlinePlayer.getPlayer();
+            cache(onlinePlayer);
+            return Optional.of(onlinePlayer);
+        }
+
         MinecraftServer server = ((CraftServer) Bukkit.getServer()).getServer();
         ServerLevel world = server.overworld();
 
@@ -77,7 +84,18 @@ public interface Session extends SessionInventory {
         ServerPlayer serverPlayer = new ServerPlayer(server, world, profile, ClientInformation.createDefault());
         Player target = serverPlayer.getBukkitEntity();
 
-        target.loadData();
+        // Canvas/Folia interdit l'appel direct à target.loadData() sur les threads de région.
+        // On utilise le PlayerDataStorage de Vanilla/Paper directement ou on charge les données du fichier dat.
+        try {
+            var playerDataStorage = server.playerDataStorage;
+            var compoundTag = playerDataStorage.load(serverPlayer);
+            if (compoundTag.isPresent()) {
+                serverPlayer.load(compoundTag.get());
+            }
+        } catch (Exception e) {
+            InvseePlugin.getInstance().getLogger().warning("Impossible de charger les données hors-ligne pour " + offlinePlayer.getName());
+        }
+
         cache(target);
         return Optional.of(target);
     }
