@@ -2,10 +2,12 @@ package at.noahb.invsee.common.session;
 
 import at.noahb.invsee.InvseePlugin;
 import com.mojang.authlib.GameProfile;
+import net.minecraft.nbt.CompoundTag;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ClientInformation;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.level.storage.PlayerDataStorage;
 import org.bukkit.Bukkit;
 import org.bukkit.OfflinePlayer;
 import org.bukkit.craftbukkit.CraftServer;
@@ -66,7 +68,6 @@ public interface Session extends SessionInventory {
             return Optional.of(cached);
         }
 
-        // Si le joueur est en ligne au moment de l'appel
         if (offlinePlayer.isOnline() && offlinePlayer.getPlayer() != null) {
             Player onlinePlayer = offlinePlayer.getPlayer();
             cache(onlinePlayer);
@@ -84,16 +85,15 @@ public interface Session extends SessionInventory {
         ServerPlayer serverPlayer = new ServerPlayer(server, world, profile, ClientInformation.createDefault());
         Player target = serverPlayer.getBukkitEntity();
 
-        // Canvas/Folia interdit l'appel direct à target.loadData() sur les threads de région.
-        // On utilise le PlayerDataStorage de Vanilla/Paper directement ou on charge les données du fichier dat.
         try {
-            var playerDataStorage = server.playerDataStorage;
-            var compoundTag = playerDataStorage.load(serverPlayer);
-            if (compoundTag.isPresent()) {
-                serverPlayer.load(compoundTag.get());
-            }
+            java.lang.reflect.Field storageField = MinecraftServer.class.getDeclaredField("playerDataStorage");
+            storageField.setAccessible(true);
+            PlayerDataStorage storage = (PlayerDataStorage) storageField.get(server);
+
+            Optional<CompoundTag> tag = storage.load(serverPlayer);
+            tag.ifPresent(serverPlayer::load);
         } catch (Exception e) {
-            InvseePlugin.getInstance().getLogger().warning("Impossible de charger les données hors-ligne pour " + offlinePlayer.getName());
+            InvseePlugin.getInstance().getLogger().warning("Impossible de charger les données du joueur : " + offlinePlayer.getName());
         }
 
         cache(target);
