@@ -13,10 +13,9 @@ public class InvseeSessionManager extends SessionManager {
     }
 
     @Override
-    public InvseeSession createSession(OfflinePlayer offlinePlayer, UUID subscriber) {
+    public void createSession(OfflinePlayer offlinePlayer, UUID subscriber) {
         InvseeSession invseeSession = new InvseeSession(offlinePlayer, subscriber);
         addSession(invseeSession);
-        return invseeSession;
     }
 
 }

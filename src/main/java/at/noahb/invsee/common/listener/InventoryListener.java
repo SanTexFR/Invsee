@@ -101,7 +101,7 @@ public record InventoryListener(InvseePlugin instance) implements Listener {
         if (!(entity instanceof Player player)) {
             return;
         }
-        player.getScheduler().run(this.instance, scheduledTask -> this.instance.getInvseeSessionManager().updateContent(player), null);
-        player.getScheduler().run(this.instance, scheduledTask -> this.instance.getEnderseeSessionManager().updateContent(player), null);
+        player.getScheduler().run(this.instance, _ -> this.instance.getInvseeSessionManager().updateContent(player), null);
+        player.getScheduler().run(this.instance, _ -> this.instance.getEnderseeSessionManager().updateContent(player), null);
     }
 }

@@ -2,16 +2,13 @@ package at.noahb.invsee.common.session;
 
 import at.noahb.invsee.InvseePlugin;
 import com.mojang.authlib.GameProfile;
-import net.kyori.adventure.text.format.NamedTextColor;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ClientInformation;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
-import net.minecraft.world.level.Level;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.OfflinePlayer;
-import org.bukkit.World;
 import org.bukkit.craftbukkit.CraftServer;
 import org.bukkit.craftbukkit.CraftWorld;
 import org.bukkit.entity.Player;
@@ -21,8 +18,6 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.locks.ReentrantLock;
-
-import static net.kyori.adventure.text.Component.text;
 
 public interface Session extends SessionInventory {
 
@@ -40,7 +35,7 @@ public interface Session extends SessionInventory {
         }
 
         getSubscribers().add(subscriber);
-        player.getScheduler().run(InvseePlugin.getInstance(), scheduledTask -> player.openInventory(getInventory()), null);
+        player.getScheduler().run(InvseePlugin.getInstance(), _ -> player.openInventory(getInventory()), null);
     }
 
 

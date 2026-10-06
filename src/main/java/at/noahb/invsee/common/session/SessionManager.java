@@ -5,7 +5,6 @@ import org.bukkit.OfflinePlayer;
 import org.bukkit.entity.HumanEntity;
 import org.bukkit.entity.Player;
 import org.bukkit.event.inventory.InventoryCloseEvent;
-import org.bukkit.inventory.Inventory;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.HashSet;
@@ -51,7 +50,7 @@ public abstract class SessionManager {
             if (session.getSubscribers().isEmpty()) {
                 this.sessions.remove(session);
             }
-            subscriber.getScheduler().run(this.instance, scheduledTask -> subscriber.closeInventory(InventoryCloseEvent.Reason.PLUGIN), null);
+            subscriber.getScheduler().run(this.instance, _ -> subscriber.closeInventory(InventoryCloseEvent.Reason.PLUGIN), null);
         });
 
     }
@@ -77,17 +76,7 @@ public abstract class SessionManager {
         this.sessions.add(session);
     }
 
-    public Optional<Session> getSessionForSubscriber(UUID subscriber) {
-        return sessions.stream()
-                .filter(session -> session.hasSubscriber(subscriber))
-                .findFirst();
-    }
-
-    protected abstract Session createSession(OfflinePlayer offlinePlayer, UUID subscriber);
-
-    public boolean isSessionInventory(Inventory inventory) {
-        return inventory instanceof SessionInventory;
-    }
+    protected abstract void createSession(OfflinePlayer offlinePlayer, UUID subscriber);
 
     public boolean isSession(@NotNull UUID whoClicked) {
         return this.sessions.stream().anyMatch(session -> session.isSubscriber(whoClicked) ||
