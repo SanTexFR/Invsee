@@ -3,7 +3,7 @@ version: '${version}'
 main: at.noahb.invsee.InvseePlugin
 api-version: '1.20.6'
 authors:
-  - MCmitNoah
+  - SanTexFR
 folia-supported: true
 softdepend:
   - LuckPerms
