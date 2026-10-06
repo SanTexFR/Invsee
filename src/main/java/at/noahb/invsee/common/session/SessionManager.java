@@ -34,7 +34,8 @@ public abstract class SessionManager {
             return;
         }
         if (!player.isOnline()) {
-            this.instance.getServer().getAsyncScheduler().runNow(this.instance, _ ->
+            // Remplace l'AsyncScheduler par le GlobalRegionScheduler requis pour Folia / Canvas
+            this.instance.getServer().getGlobalRegionScheduler().run(this.instance, task ->
                     createSession(player, subscriber)
             );
         } else {

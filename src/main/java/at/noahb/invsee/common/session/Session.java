@@ -7,12 +7,9 @@ import net.minecraft.server.level.ClientInformation;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import org.bukkit.Bukkit;
-import org.bukkit.Location;
 import org.bukkit.OfflinePlayer;
 import org.bukkit.craftbukkit.CraftServer;
-import org.bukkit.craftbukkit.CraftWorld;
 import org.bukkit.entity.Player;
-import org.jetbrains.annotations.NotNull;
 
 import java.util.Optional;
 import java.util.Set;
@@ -38,11 +35,10 @@ public interface Session extends SessionInventory {
         player.getScheduler().run(InvseePlugin.getInstance(), _ -> player.openInventory(getInventory()), null);
     }
 
-
     default void save() {
         Player cachedPlayer = getCachedPlayer();
         if (cachedPlayer != null) {
-            InvseePlugin.getInstance().getServer().getAsyncScheduler().runNow(InvseePlugin.getInstance(), _ ->
+            InvseePlugin.getInstance().getServer().getGlobalRegionScheduler().run(InvseePlugin.getInstance(), _ ->
                     cachedPlayer.saveData()
             );
         }
@@ -71,20 +67,16 @@ public interface Session extends SessionInventory {
         }
 
         MinecraftServer server = ((CraftServer) Bukkit.getServer()).getServer();
-        Location location = offlinePlayer.getLocation();
-        ServerLevel world;
+        ServerLevel world = server.overworld();
 
-        if (location == null) {
-            world = server.overworld();
-        } else {
-            world = ((CraftWorld) location.getWorld()).getHandle();
-        }
-
-        GameProfile profile = new GameProfile(offlinePlayer.getUniqueId(),
-                offlinePlayer.getName() != null ? offlinePlayer.getName() : offlinePlayer.getUniqueId().toString());
+        GameProfile profile = new GameProfile(
+                offlinePlayer.getUniqueId(),
+                offlinePlayer.getName() != null ? offlinePlayer.getName() : offlinePlayer.getUniqueId().toString()
+        );
 
         ServerPlayer serverPlayer = new ServerPlayer(server, world, profile, ClientInformation.createDefault());
         Player target = serverPlayer.getBukkitEntity();
+
         target.loadData();
         cache(target);
         return Optional.of(target);
@@ -108,5 +100,5 @@ public interface Session extends SessionInventory {
 
     Player getCachedPlayer();
 
-    boolean isSubscriber(@NotNull UUID whoClicked);
+    boolean isSubscriber(UUID whoClicked);
 }
