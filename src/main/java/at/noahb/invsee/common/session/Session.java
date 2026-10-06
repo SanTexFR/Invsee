@@ -3,16 +3,18 @@ package at.noahb.invsee.common.session;
 import at.noahb.invsee.InvseePlugin;
 import com.mojang.authlib.GameProfile;
 import net.minecraft.nbt.CompoundTag;
+import net.minecraft.nbt.NbtIo;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ClientInformation;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
-import net.minecraft.world.level.storage.PlayerDataStorage;
+import net.minecraft.world.level.storage.LevelResource;
 import org.bukkit.Bukkit;
 import org.bukkit.OfflinePlayer;
 import org.bukkit.craftbukkit.CraftServer;
 import org.bukkit.entity.Player;
 
+import java.nio.file.Path;
 import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
@@ -83,19 +85,20 @@ public interface Session extends SessionInventory {
         );
 
         ServerPlayer serverPlayer = new ServerPlayer(server, world, profile, ClientInformation.createDefault());
-        Player target = serverPlayer.getBukkitEntity();
 
-        try {
-            java.lang.reflect.Field storageField = MinecraftServer.class.getDeclaredField("playerDataStorage");
-            storageField.setAccessible(true);
-            PlayerDataStorage storage = (PlayerDataStorage) storageField.get(server);
+        Path playerDirPath = world.getServer().getWorldPath(LevelResource.PLAYER_DATA_DIR);
+        Path playerFilePath = playerDirPath.resolve(offlinePlayer.getUniqueId() + ".dat");
 
-            Optional<CompoundTag> tag = storage.load(serverPlayer);
-            tag.ifPresent(serverPlayer::load);
-        } catch (Exception e) {
-            InvseePlugin.getInstance().getLogger().warning("Impossible de charger les données du joueur : " + offlinePlayer.getName());
+        if (java.nio.file.Files.exists(playerFilePath)) {
+            try {
+                CompoundTag tag = NbtIo.readCompressed(playerFilePath, net.minecraft.nbt.NbtAccounter.unlimitedHeap());
+                serverPlayer.load(tag);
+            } catch (Exception e) {
+                InvseePlugin.getInstance().getLogger().warning("Impossible de lire le fichier playerdata pour " + offlinePlayer.getName());
+            }
         }
 
+        Player target = serverPlayer.getBukkitEntity();
         cache(target);
         return Optional.of(target);
     }
